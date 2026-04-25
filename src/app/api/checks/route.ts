@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { normalizeUrl, isValidUrl } from "@/lib/utils";
+import { normalizeUrl, isValidUrl, CATEGORIES } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   let normalized = "";
@@ -11,6 +11,13 @@ export async function POST(request: NextRequest) {
     if (!url || !category) {
       return NextResponse.json(
         { error: "URL and category are required" },
+        { status: 400 }
+      );
+    }
+
+    if (!(CATEGORIES as readonly string[]).includes(category)) {
+      return NextResponse.json(
+        { error: "Invalid category" },
         { status: 400 }
       );
     }
