@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeUrl, isValidUrl } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
+  let normalized = "";
   try {
     const body = await request.json();
     const { url, category } = body;
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const normalized = normalizeUrl(url);
+    normalized = normalizeUrl(url);
 
     const existing = await prisma.check.findUnique({
       where: { url: normalized },
@@ -36,7 +37,20 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ check, existing: false }, { status: 201 });
-  } catch {
+  } catch (error: unknown) {
+    if (
+      normalized &&
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002"
+    ) {
+      const existing = await prisma.check.findUnique({
+        where: { url: normalized },
+      });
+      if (existing) {
+        return NextResponse.json({ check: existing, existing: true });
+      }
+    }
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

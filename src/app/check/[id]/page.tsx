@@ -15,7 +15,7 @@ export default async function CheckPage({
     where: { id },
     include: {
       reports: { orderBy: { createdAt: "desc" }, take: 50 },
-      _count: { select: { votes: true } },
+      _count: { select: { votes: true, reports: true } },
     },
   });
 
@@ -48,7 +48,7 @@ export default async function CheckPage({
           </span>
           <span>
             Reports:{" "}
-            <strong className="text-gray-900">{check.reports.length}</strong>
+            <strong className="text-gray-900">{check._count.reports}</strong>
           </span>
         </div>
 
