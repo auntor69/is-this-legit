@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Check {
+  id        String   @id @default(cuid())
+  url       String   @unique
+  category  String
+  status    String   @default("pending")
+  score     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reports   Report[]
+  votes     Vote[]
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  reason    String
+  ip        String   @default("")
+  checkId   String
+  check     Check    @relation(fields: [checkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  value     Int
+  ip        String   @default("")
+  checkId   String
+  check     Check    @relation(fields: [checkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([checkId, ip])
+}

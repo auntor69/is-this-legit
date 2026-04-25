@@ -1,65 +1,186 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { CATEGORIES } from "@/lib/utils";
 
 export default function Home() {
+  const router = useRouter();
+  const [url, setUrl] = useState("");
+  const [category, setCategory] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (!url.trim()) {
+      setError("Please enter a URL");
+      return;
+    }
+    if (!category) {
+      setError("Please select a category");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/checks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url.trim(), category }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Something went wrong");
+        return;
+      }
+
+      router.push(`/check/${data.check.id}`);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="space-y-8">
+      <section className="text-center space-y-3 pt-4">
+        <h1 className="text-3xl font-bold tracking-tight">
+          🛡️ Is This Legit?
+        </h1>
+        <p className="text-gray-600 max-w-md mx-auto">
+          Check if a website, shop, or page is safe. Paste the link below and
+          see what the community says.
+        </p>
+      </section>
+
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-xl border border-gray-200 p-5 space-y-4 shadow-sm"
+      >
+        <div>
+          <label
+            htmlFor="url"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Website or Page URL
+          </label>
+          <input
+            id="url"
+            type="text"
+            placeholder="e.g. facebook.com/somepage or shop.com.bd"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Category
+          </label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          >
+            <option value="">Select a category...</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error && (
+          <p className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">
+            {error}
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Checking..." : "Check This Link"}
+        </button>
+      </form>
+
+      <RecentChecks />
     </div>
+  );
+}
+
+function RecentChecks() {
+  const [checks, setChecks] = useState<
+    Array<{
+      id: string;
+      url: string;
+      category: string;
+      status: string;
+      score: number;
+    }>
+  >([]);
+  const [loaded, setLoaded] = useState(false);
+
+  if (!loaded) {
+    fetch("/api/checks")
+      .then((r) => r.json())
+      .then((data) => {
+        setChecks(data.checks || []);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }
+
+  if (!loaded) return null;
+  if (checks.length === 0) return null;
+
+  const statusStyles: Record<string, string> = {
+    trusted: "bg-green-100 text-green-700",
+    suspicious: "bg-yellow-100 text-yellow-700",
+    scam: "bg-red-100 text-red-700",
+    pending: "bg-gray-100 text-gray-700",
+  };
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-lg font-semibold">Recent Checks</h2>
+      <div className="space-y-2">
+        {checks.map((check) => (
+          <a
+            key={check.id}
+            href={`/check/${check.id}`}
+            className="block bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{check.url}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {check.category} · Score: {check.score}
+                </p>
+              </div>
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${statusStyles[check.status] || statusStyles.pending}`}
+              >
+                {check.status.charAt(0).toUpperCase() + check.status.slice(1)}
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
   );
 }
