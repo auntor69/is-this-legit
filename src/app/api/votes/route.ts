@@ -32,31 +32,31 @@ export async function POST(request: NextRequest) {
       }
 
       const diff = value - existing.value;
-      await prisma.$transaction(async (tx) => {
-        await tx.vote.update({
+      const [, updatedCheck] = await prisma.$transaction([
+        prisma.vote.update({
           where: { id: existing.id },
           data: { value },
-        });
-        await tx.check.update({
+        }),
+        prisma.check.update({
           where: { id: checkId },
           data: { score: { increment: diff } },
-        });
-      });
+        }),
+      ]);
 
-      return NextResponse.json({ message: "Vote updated" });
+      return NextResponse.json({ message: "Vote updated", score: updatedCheck.score });
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.vote.create({
+    const [, updatedCheck] = await prisma.$transaction([
+      prisma.vote.create({
         data: { checkId, value, ip },
-      });
-      await tx.check.update({
+      }),
+      prisma.check.update({
         where: { id: checkId },
         data: { score: { increment: value } },
-      });
-    });
+      }),
+    ]);
 
-    return NextResponse.json({ message: "Vote recorded" }, { status: 201 });
+    return NextResponse.json({ message: "Vote recorded", score: updatedCheck.score }, { status: 201 });
   } catch {
     return NextResponse.json(
       { error: "Something went wrong" },

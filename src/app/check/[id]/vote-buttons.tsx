@@ -32,11 +32,7 @@ export default function VoteButtons({
         return;
       }
 
-      if (voted !== null) {
-        setScore((prev) => prev + value - voted);
-      } else {
-        setScore((prev) => prev + value);
-      }
+      setScore(data.score);
       setVoted(value);
     } catch {
       setError("Network error");
