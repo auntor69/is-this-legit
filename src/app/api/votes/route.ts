@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const headersList = await headers();
     const forwarded = headersList.get("x-forwarded-for");
     const realIp = headersList.get("x-real-ip");
-    const ip = forwarded ? forwarded.split(",")[0].trim() : realIp || "unknown";
+    const ip = realIp || (forwarded ? forwarded.split(",")[0].trim() : "unknown");
 
     const existing = await prisma.vote.findUnique({
       where: { checkId_ip: { checkId, ip } },
