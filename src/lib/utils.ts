@@ -1,9 +1,8 @@
 export function normalizeUrl(input: string): string {
   let url = input.trim().toLowerCase();
   url = url.replace(/\/+$/, "");
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    url = "https://" + url;
-  }
+  url = url.replace(/^https?:\/\//, "");
+  url = "https://" + url;
   try {
     const parsed = new URL(url);
     return parsed.origin + parsed.pathname.replace(/\/+$/, "") + parsed.search;
@@ -14,7 +13,7 @@ export function normalizeUrl(input: string): string {
 
 export function isValidUrl(input: string): boolean {
   try {
-    let url = input.trim();
+    let url = input.trim().toLowerCase();
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
       url = "https://" + url;
     }
