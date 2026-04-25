@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/utils";
 
@@ -135,7 +135,7 @@ function RecentChecks() {
   >([]);
   const [loaded, setLoaded] = useState(false);
 
-  if (!loaded) {
+  useEffect(() => {
     fetch("/api/checks")
       .then((r) => r.json())
       .then((data) => {
@@ -143,7 +143,7 @@ function RecentChecks() {
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
-  }
+  }, []);
 
   if (!loaded) return null;
   if (checks.length === 0) return null;

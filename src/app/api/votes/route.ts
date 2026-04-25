@@ -30,27 +30,29 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      await prisma.vote.update({
-        where: { id: existing.id },
-        data: { value },
-      });
-
       const diff = value - existing.value;
-      await prisma.check.update({
-        where: { id: checkId },
-        data: { score: { increment: diff } },
+      await prisma.$transaction(async (tx) => {
+        await tx.vote.update({
+          where: { id: existing.id },
+          data: { value },
+        });
+        await tx.check.update({
+          where: { id: checkId },
+          data: { score: { increment: diff } },
+        });
       });
 
       return NextResponse.json({ message: "Vote updated" });
     }
 
-    await prisma.vote.create({
-      data: { checkId, value, ip },
-    });
-
-    await prisma.check.update({
-      where: { id: checkId },
-      data: { score: { increment: value } },
+    await prisma.$transaction(async (tx) => {
+      await tx.vote.create({
+        data: { checkId, value, ip },
+      });
+      await tx.check.update({
+        where: { id: checkId },
+        data: { score: { increment: value } },
+      });
     });
 
     return NextResponse.json({ message: "Vote recorded" }, { status: 201 });

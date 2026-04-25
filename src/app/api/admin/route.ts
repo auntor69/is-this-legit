@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { timingSafeEqual } from "crypto";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
@@ -7,7 +8,8 @@ function checkAuth(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return false;
   const password = authHeader.replace("Bearer ", "");
-  return password === ADMIN_PASSWORD;
+  if (password.length !== ADMIN_PASSWORD.length) return false;
+  return timingSafeEqual(Buffer.from(password), Buffer.from(ADMIN_PASSWORD));
 }
 
 export async function GET(request: NextRequest) {
